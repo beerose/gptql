@@ -12,7 +12,9 @@ function isRateLimitExceeded(err: unknown): boolean {
   );
 }
 
-type Unpromise<T extends Promise<any>> = T extends Promise<infer U> ? U : never;
+type Unpromisify<T extends Promise<any>> = T extends Promise<infer U>
+  ? U
+  : never;
 
 export function gptqlClient({
   endpoint,
@@ -54,7 +56,9 @@ export function gptqlClient({
 
   return {
     query: async (prompt: string, requestOptions?: RequestInit) => {
-      let completion: Unpromise<ReturnType<typeof openai.createChatCompletion>>;
+      let completion: Unpromisify<
+        ReturnType<typeof openai.createChatCompletion>
+      >;
       try {
         completion = await openai.createChatCompletion(
           getCompletionRequest(prompt, "query"),
@@ -88,9 +92,16 @@ export function gptqlClient({
         }),
       });
 
-      const response = await result.json();
+      const response: Record<string, any> = await result.json();
 
       return response;
     },
   };
 }
+
+const client = gptqlClient({
+  endpoint: "https://example.com/graphql",
+  openaiApiKey: "<your-openai-api-key>",
+});
+
+const data = await client.query("I want to get all users");
